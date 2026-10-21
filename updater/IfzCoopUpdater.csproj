@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net472</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>latest</LangVersion>
+    <CodePage>65001</CodePage>
     <AssemblyName>IFZ-Co-op-Updater</AssemblyName>
     <RootNamespace>IfzCoopUpdater</RootNamespace>
     <Nullable>disable</Nullable>
@@ -17,3 +18,4 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 </Project>
+
