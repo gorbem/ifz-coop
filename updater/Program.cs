@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -21,6 +21,7 @@ namespace IfzCoopUpdater
 
         public static readonly string[] ManifestUrls =
         {
+            "https://api.github.com/repos/" + Repo + "/contents/manifest.json",
             "https://raw.githubusercontent.com/" + Repo + "/main/manifest.json",
             "https://cdn.jsdelivr.net/gh/" + Repo + "@main/manifest.json",
             "https://github.com/" + Repo + "/raw/main/manifest.json",
@@ -76,26 +77,32 @@ namespace IfzCoopUpdater
             {
                 try
                 {
-                    log?.Invoke("Читаю манифест: " + url);
+                    log?.Invoke("Р§РёС‚Р°СЋ РјР°РЅРёС„РµСЃС‚: " + url);
                     using (var client = Http.CreateClient())
                     using (var resp = client.GetAsync(url).Result)
                     {
                         resp.EnsureSuccessStatusCode();
                         var json = resp.Content.ReadAsStringAsync().Result;
+                        if (url.Contains("api.github.com"))
+                        {
+                            var doc = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
+                            var b64 = (string)doc["content"];
+                            json = Encoding.UTF8.GetString(Convert.FromBase64String(b64.Replace("\n", "")));
+                        }
                         var m = new JavaScriptSerializer().Deserialize<Manifest>(json);
                         if (m == null || string.IsNullOrEmpty(m.modUrl) || string.IsNullOrEmpty(m.modVersion))
-                            throw new Exception("манифест пустой или неполный");
-                        log?.Invoke("Манифест: мод " + m.modVersion + ", BepInEx " + m.bepinexVersion);
+                            throw new Exception("РјР°РЅРёС„РµСЃС‚ РїСѓСЃС‚РѕР№ РёР»Рё РЅРµРїРѕР»РЅС‹Р№");
+                        log?.Invoke("РњР°РЅРёС„РµСЃС‚: РјРѕРґ " + m.modVersion + ", BepInEx " + m.bepinexVersion);
                         return m;
                     }
                 }
                 catch (Exception e)
                 {
                     last = e;
-                    log?.Invoke("  не вышло: " + e.Message);
+                    log?.Invoke("  РЅРµ РІС‹С€Р»Рѕ: " + e.Message);
                 }
             }
-            throw new Exception("Не удалось получить manifest.json ни с одного адреса.\n" + last?.Message);
+            throw new Exception("РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ manifest.json РЅРё СЃ РѕРґРЅРѕРіРѕ Р°РґСЂРµСЃР°.\n" + last?.Message);
         }
     }
 
@@ -151,25 +158,25 @@ namespace IfzCoopUpdater
             Action<int> prog = p => pct?.Invoke(p);
 
             dir = (dir ?? "").Trim().TrimEnd('\\', '/');
-            if (!Directory.Exists(dir)) throw new Exception("Папка не найдена: " + dir);
+            if (!Directory.Exists(dir)) throw new Exception("РџР°РїРєР° РЅРµ РЅР°Р№РґРµРЅР°: " + dir);
             if (!File.Exists(Path.Combine(dir, ExeName)))
             {
                 var sub = Path.Combine(dir, "Infection Free Zone");
                 if (File.Exists(Path.Combine(sub, ExeName))) dir = sub;
-                else throw new Exception("В папке нет " + ExeName + ". Выбери папку игры.");
+                else throw new Exception("Р’ РїР°РїРєРµ РЅРµС‚ " + ExeName + ". Р’С‹Р±РµСЂРё РїР°РїРєСѓ РёРіСЂС‹.");
             }
 
-            say("Папка игры: " + dir);
+            say("РџР°РїРєР° РёРіСЂС‹: " + dir);
             if (Process.GetProcessesByName("Infection Free Zone").Length > 0)
-                throw new Exception("Infection Free Zone запущена. Закрой игру и повтори.");
+                throw new Exception("Infection Free Zone Р·Р°РїСѓС‰РµРЅР°. Р—Р°РєСЂРѕР№ РёРіСЂСѓ Рё РїРѕРІС‚РѕСЂРё.");
 
             var gameVersion = GameVersion(dir);
-            say("Версия игры: " + (gameVersion ?? "неизвестна"));
+            say("Р’РµСЂСЃРёСЏ РёРіСЂС‹: " + (gameVersion ?? "РЅРµРёР·РІРµСЃС‚РЅР°"));
             if (gameVersion != null && manifest.gameVersion != null && gameVersion != manifest.gameVersion)
-                say("ВНИМАНИЕ: мод собран под " + manifest.gameVersion + ".");
+                say("Р’РќРРњРђРќРР•: РјРѕРґ СЃРѕР±СЂР°РЅ РїРѕРґ " + manifest.gameVersion + ".");
 
             var local = LocalVersion(dir);
-            say("Установленная версия мода: " + (local ?? "нет") + "  →  доступна: " + manifest.modVersion);
+            say("РЈСЃС‚Р°РЅРѕРІР»РµРЅРЅР°СЏ РІРµСЂСЃРёСЏ РјРѕРґР°: " + (local ?? "РЅРµС‚") + "  в†’  РґРѕСЃС‚СѓРїРЅР°: " + manifest.modVersion);
 
             var tmp = Path.Combine(Path.GetTempPath(), "ifz-coop-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tmp);
@@ -178,16 +185,16 @@ namespace IfzCoopUpdater
                 using (var client = Http.CreateClient())
                 {
                     var bepZip = Path.Combine(tmp, "bepinex.zip");
-                    say("Скачиваю BepInEx " + manifest.bepinexVersion + " (официальный GitHub)...");
+                    say("РЎРєР°С‡РёРІР°СЋ BepInEx " + manifest.bepinexVersion + " (РѕС„РёС†РёР°Р»СЊРЅС‹Р№ GitHub)...");
                     Http.Download(client, manifest.bepinexUrl, bepZip, (r, t) => Report(prog, r, t, 0, 45));
                     Verify(bepZip, manifest.bepinexSha256, "BepInEx");
 
                     var modZip = Path.Combine(tmp, "mod.zip");
-                    say("Скачиваю мод " + manifest.modVersion + "...");
+                    say("РЎРєР°С‡РёРІР°СЋ РјРѕРґ " + manifest.modVersion + "...");
                     Http.Download(client, manifest.modUrl, modZip, (r, t) => Report(prog, r, t, 45, 95));
-                    Verify(modZip, manifest.modSha256, "мод");
+                    Verify(modZip, manifest.modSha256, "РјРѕРґ");
 
-                    say("Распаковываю...");
+                    say("Р Р°СЃРїР°РєРѕРІС‹РІР°СЋ...");
                     var bepDir = Path.Combine(tmp, "bep");
                     var modDir = Path.Combine(tmp, "mod");
                     ZipFile.ExtractToDirectory(bepZip, bepDir);
@@ -196,20 +203,20 @@ namespace IfzCoopUpdater
                     var backup = Path.Combine(dir, BackupPrefix + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                     Backup(dir, backup, say);
 
-                    say("Копирую файлы...");
+                    say("РљРѕРїРёСЂСѓСЋ С„Р°Р№Р»С‹...");
                     CopyTree(bepDir, dir);
                     CopyTree(modDir, dir);
 
                     File.WriteAllText(Path.Combine(dir, Program.VersionFile),
                         manifest.modVersion + Environment.NewLine, new UTF8Encoding(false));
 
-                    try { Shortcuts(dir); } catch (Exception e) { say("Ярлык не создан: " + e.Message); }
+                    try { Shortcuts(dir); } catch (Exception e) { say("РЇСЂР»С‹Рє РЅРµ СЃРѕР·РґР°РЅ: " + e.Message); }
 
                     prog(100);
                     say("");
-                    say("ГОТОВО. Версия " + manifest.modVersion + ".");
-                    say("Запуск: ярлык «Infection Free Zone (Co-op)» или «Запуск кооп.bat».");
-                    say("Steam должен быть запущен. Не запускай игру кнопкой Play в Steam.");
+                    say("Р“РћРўРћР’Рћ. Р’РµСЂСЃРёСЏ " + manifest.modVersion + ".");
+                    say("Р—Р°РїСѓСЃРє: СЏСЂР»С‹Рє В«Infection Free Zone (Co-op)В» РёР»Рё В«Р—Р°РїСѓСЃРє РєРѕРѕРї.batВ».");
+                    say("Steam РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ Р·Р°РїСѓС‰РµРЅ. РќРµ Р·Р°РїСѓСЃРєР°Р№ РёРіСЂСѓ РєРЅРѕРїРєРѕР№ Play РІ Steam.");
                     return 0;
                 }
             }
@@ -224,7 +231,7 @@ namespace IfzCoopUpdater
             if (string.IsNullOrEmpty(expected)) return;
             var actual = Http.Sha256(path);
             if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
-                throw new Exception("SHA-256 " + what + " не совпал.\nОжидался: " + expected + "\nПолучен: " + actual);
+                throw new Exception("SHA-256 " + what + " РЅРµ СЃРѕРІРїР°Р».\nРћР¶РёРґР°Р»СЃСЏ: " + expected + "\nРџРѕР»СѓС‡РµРЅ: " + actual);
         }
 
         private static void Report(Action<int> pct, long read, long total, int from, int to)
@@ -280,7 +287,7 @@ namespace IfzCoopUpdater
                     CopyTree(src, dst);
                 }
             }
-            if (Directory.Exists(backup)) say("Резервная копия: " + backup);
+            if (Directory.Exists(backup)) say("Р РµР·РµСЂРІРЅР°СЏ РєРѕРїРёСЏ: " + backup);
         }
 
         private static void CopyTree(string src, string dst)
@@ -297,7 +304,7 @@ namespace IfzCoopUpdater
         private static void Shortcuts(string dir)
         {
             var exe = Path.Combine(dir, ExeName);
-            var bat = Path.Combine(dir, "Запуск кооп.bat");
+            var bat = Path.Combine(dir, "Р—Р°РїСѓСЃРє РєРѕРѕРї.bat");
             if (!File.Exists(bat))
                 File.WriteAllText(bat, "@echo off\r\ncd /d \"%~dp0\"\r\nstart \"\" \"" + ExeName + "\"\r\n", Encoding.ASCII);
 
@@ -310,7 +317,7 @@ namespace IfzCoopUpdater
             sc.TargetPath = exe;
             sc.WorkingDirectory = dir;
             sc.IconLocation = exe + ",0";
-            sc.Description = "Infection Free Zone — кооп-сборка";
+            sc.Description = "Infection Free Zone вЂ” РєРѕРѕРї-СЃР±РѕСЂРєР°";
             sc.Save();
         }
     }
@@ -327,7 +334,7 @@ namespace IfzCoopUpdater
 
         public UpdaterForm()
         {
-            Text = "Infection Free Zone — Co-op Updater";
+            Text = "Infection Free Zone вЂ” Co-op Updater";
             Width = 820;
             Height = 520;
             StartPosition = FormStartPosition.CenterScreen;
@@ -344,28 +351,28 @@ namespace IfzCoopUpdater
             };
             var sub = new Label
             {
-                Text = "IFZ Multiplayer RC7 (патч 0.26.10.8) + BepInEx 5.4.23.2 · github.com/" + Program.Repo,
+                Text = "IFZ Multiplayer RC7 (РїР°С‚С‡ 0.26.10.8) + BepInEx 5.4.23.2 В· github.com/" + Program.Repo,
                 AutoSize = true,
                 Location = new Point(18, 44),
                 ForeColor = Color.DimGray
             };
-            var pathLabel = new Label { Text = "Папка игры:", AutoSize = true, Location = new Point(18, 76) };
+            var pathLabel = new Label { Text = "РџР°РїРєР° РёРіСЂС‹:", AutoSize = true, Location = new Point(18, 76) };
             _path.Location = new Point(100, 73);
             _path.Width = 570;
-            var browse = new Button { Text = "Обзор...", Location = new Point(680, 71), Width = 110 };
+            var browse = new Button { Text = "РћР±Р·РѕСЂ...", Location = new Point(680, 71), Width = 110 };
             browse.Click += (s, e) => Browse();
 
-            _check.Text = "Проверить обновления";
+            _check.Text = "РџСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ";
             _check.Location = new Point(18, 108);
             _check.Width = 170;
             _check.Click += async (s, e) => await CheckAsync();
 
-            _install.Text = "Установить / Обновить";
+            _install.Text = "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ / РћР±РЅРѕРІРёС‚СЊ";
             _install.Location = new Point(196, 108);
             _install.Width = 180;
             _install.Click += async (s, e) => await InstallAsync();
 
-            _play.Text = "Играть";
+            _play.Text = "РРіСЂР°С‚СЊ";
             _play.Location = new Point(384, 108);
             _play.Width = 110;
             _play.Click += (s, e) => Play();
@@ -373,7 +380,7 @@ namespace IfzCoopUpdater
             _status.Location = new Point(18, 148);
             _status.Width = 770;
             _status.Height = 22;
-            _status.Text = "Укажи папку игры и нажми «Установить / Обновить».";
+            _status.Text = "РЈРєР°Р¶Рё РїР°РїРєСѓ РёРіСЂС‹ Рё РЅР°Р¶РјРё В«РЈСЃС‚Р°РЅРѕРІРёС‚СЊ / РћР±РЅРѕРІРёС‚СЊВ».";
 
             _log.Location = new Point(18, 176);
             _log.Width = 772;
@@ -396,7 +403,7 @@ namespace IfzCoopUpdater
         {
             using (var dlg = new FolderBrowserDialog())
             {
-                dlg.Description = "Выбери папку Infection Free Zone";
+                dlg.Description = "Р’С‹Р±РµСЂРё РїР°РїРєСѓ Infection Free Zone";
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     _path.Text = dlg.SelectedPath;
@@ -417,19 +424,19 @@ namespace IfzCoopUpdater
         private async Task CheckAsync()
         {
             _check.Enabled = false;
-            _status.Text = "Проверяю обновления...";
+            _status.Text = "РџСЂРѕРІРµСЂСЏСЋ РѕР±РЅРѕРІР»РµРЅРёСЏ...";
             try
             {
                 _manifest = await Task.Run(() => ManifestLoader.Load(Append));
                 var local = Installer.LocalVersion(_path.Text.Trim());
-                var v = "Установлено: " + (local ?? "нет") + "   ·   В сети: " + _manifest.modVersion;
-                if (local == _manifest.modVersion) v += "   (актуально)";
+                var v = "РЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ: " + (local ?? "РЅРµС‚") + "   В·   Р’ СЃРµС‚Рё: " + _manifest.modVersion;
+                if (local == _manifest.modVersion) v += "   (Р°РєС‚СѓР°Р»СЊРЅРѕ)";
                 _status.Text = v;
             }
             catch (Exception e)
             {
-                _status.Text = "Не удалось проверить обновления.";
-                Append("ОШИБКА: " + e.Message);
+                _status.Text = "РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЂРёС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ.";
+                Append("РћРЁРР‘РљРђ: " + e.Message);
             }
             finally { _check.Enabled = true; }
         }
@@ -437,7 +444,7 @@ namespace IfzCoopUpdater
         private async Task InstallAsync()
         {
             var dir = _path.Text.Trim();
-            if (dir.Length == 0) { MessageBox.Show(this, "Выбери папку игры."); return; }
+            if (dir.Length == 0) { MessageBox.Show(this, "Р’С‹Р±РµСЂРё РїР°РїРєСѓ РёРіСЂС‹."); return; }
             _install.Enabled = false;
             _check.Enabled = false;
             _log.Text = "";
@@ -445,14 +452,14 @@ namespace IfzCoopUpdater
             {
                 if (_manifest == null) _manifest = await Task.Run(() => ManifestLoader.Load(Append));
                 var code = await Task.Run(() => Installer.Run(dir, _manifest, Append,
-                    p => { if (IsHandleCreated) BeginInvoke(new Action(() => _status.Text = "Установка... " + p + "%")); },
+                    p => { if (IsHandleCreated) BeginInvoke(new Action(() => _status.Text = "РЈСЃС‚Р°РЅРѕРІРєР°... " + p + "%")); },
                     false));
-                if (code == 0) { SaveSettings(dir); _status.Text = "Готово: " + _manifest.modVersion; }
+                if (code == 0) { SaveSettings(dir); _status.Text = "Р“РѕС‚РѕРІРѕ: " + _manifest.modVersion; }
             }
             catch (Exception e)
             {
-                Append("ОШИБКА: " + e.Message);
-                MessageBox.Show(this, e.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Append("РћРЁРР‘РљРђ: " + e.Message);
+                MessageBox.Show(this, e.Message, "РћС€РёР±РєР°", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally { _install.Enabled = true; _check.Enabled = true; }
         }
@@ -461,7 +468,7 @@ namespace IfzCoopUpdater
         {
             var dir = _path.Text.Trim();
             var exe = Path.Combine(dir, Installer.ExeName);
-            if (!File.Exists(exe)) { MessageBox.Show(this, "Сначала укажи папку игры и установи мод."); return; }
+            if (!File.Exists(exe)) { MessageBox.Show(this, "РЎРЅР°С‡Р°Р»Р° СѓРєР°Р¶Рё РїР°РїРєСѓ РёРіСЂС‹ Рё СѓСЃС‚Р°РЅРѕРІРё РјРѕРґ."); return; }
             Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = dir });
         }
 
@@ -484,3 +491,4 @@ namespace IfzCoopUpdater
         }
     }
 }
+
