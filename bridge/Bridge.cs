@@ -13,7 +13,7 @@ namespace EconomyConfigBridge
 
         private void Awake()
         {
-            Logger.LogInfo("EconomyConfigBridge ready (v1.0.5)");
+            Logger.LogInfo("EconomyConfigBridge ready (v1.0.6)");
             try
             {
                 new HarmonyLib.Harmony("local.ifz.squadfog").PatchAll(typeof(SquadFogPatch));
@@ -105,6 +105,7 @@ namespace EconomyConfigBridge
         }
     }
 }
+
 
 
 
