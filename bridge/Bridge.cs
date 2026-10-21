@@ -13,7 +13,7 @@ namespace EconomyConfigBridge
 
         private void Awake()
         {
-            Logger.LogInfo("EconomyConfigBridge ready (v1.0.3)");
+            Logger.LogInfo("EconomyConfigBridge ready (v1.0.5)");
             try
             {
                 new HarmonyLib.Harmony("local.ifz.squadfog").PatchAll(typeof(SquadFogPatch));
@@ -28,6 +28,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("LobbyFilterPatch applied (ifzmp_proto=31)");
             if (SnapshotLockPatch.TryApply())
                 Logger.LogInfo("SnapshotLockPatch applied (save-lock retry)");
+            if (HqPlacementEligibilityPatch.TryApply())
+                Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
         }
 
         private void Update()
@@ -39,6 +41,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("LobbyFilterPatch applied (ifzmp_proto=31)");
             if (SnapshotLockPatch.TryApply())
                 Logger.LogInfo("SnapshotLockPatch applied (save-lock retry)");
+            if (HqPlacementEligibilityPatch.TryApply())
+                Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
         }
     }
 
@@ -101,5 +105,7 @@ namespace EconomyConfigBridge
         }
     }
 }
+
+
 
 
