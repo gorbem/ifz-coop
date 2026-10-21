@@ -1,8 +1,8 @@
 {
-  "modVersion": "0.3.0-rc7-p5",
+  "modVersion": "0.3.0-rc7-p6",
   "gameVersion": "0.26.10.8",
-  "modUrl": "https://github.com/gorbem/ifz-coop/releases/download/v0.3.0-rc7-p5/ifz-coop-mod-0.3.0-rc7-p5.zip",
-  "modSha256": "b47da61f2ce681f02f6f5626fbfaa3d1aefeeec82ab660b83da1db96ab08ee37",
+  "modUrl": "https://github.com/gorbem/ifz-coop/releases/download/v0.3.0-rc7-p6/ifz-coop-mod-0.3.0-rc7-p6.zip",
+  "modSha256": "b8dddea3dc8f0d87deca6833c913f685933f3113cd86b833dd5d0388dc894b8c",
   "bepinexVersion": "5.4.23.2",
   "bepinexUrl": "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.2/BepInEx_win_x64_5.4.23.2.zip",
   "bepinexSha256": "f752ce4e838f4c305b9da1404b6745f2cff23b8bfd494f79f0c84d0a01f59b46"

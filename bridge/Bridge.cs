@@ -13,7 +13,7 @@ namespace EconomyConfigBridge
 
         private void Awake()
         {
-            Logger.LogInfo("EconomyConfigBridge ready (v1.0.6)");
+            Logger.LogInfo("EconomyConfigBridge ready (v1.0.7)");
             try
             {
                 new HarmonyLib.Harmony("local.ifz.squadfog").PatchAll(typeof(SquadFogPatch));
@@ -30,6 +30,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("SnapshotLockPatch applied (save-lock retry)");
             if (HqPlacementEligibilityPatch.TryApply())
                 Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
+            if (RedactPlacementFallbackPatch.TryApply())
+                Logger.LogInfo("RedactPlacementFallbackPatch applied (null HQ -> placement)");
         }
 
         private void Update()
@@ -43,6 +45,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("SnapshotLockPatch applied (save-lock retry)");
             if (HqPlacementEligibilityPatch.TryApply())
                 Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
+            if (RedactPlacementFallbackPatch.TryApply())
+                Logger.LogInfo("RedactPlacementFallbackPatch applied (null HQ -> placement)");
         }
     }
 
