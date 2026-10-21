@@ -9,11 +9,13 @@ namespace EconomyConfigBridge
     [BepInPlugin("local.ifz.economyconfigbridge", "IFZ EconomyConfig bridge", "1.0.0")]
     public class Plugin : BaseUnityPlugin
     {
+        internal static BepInEx.Logging.ManualLogSource Log;
         private float _nextRefresh;
 
         private void Awake()
         {
-            Logger.LogInfo("EconomyConfigBridge ready (v1.0.7)");
+            Log = Logger;
+            Logger.LogInfo("EconomyConfigBridge ready (v1.0.8)");
             try
             {
                 new HarmonyLib.Harmony("local.ifz.squadfog").PatchAll(typeof(SquadFogPatch));
@@ -32,6 +34,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
             if (RedactPlacementFallbackPatch.TryApply())
                 Logger.LogInfo("RedactPlacementFallbackPatch applied (null HQ -> placement)");
+            if (WorkFilterDiagPatch.TryApply())
+                Logger.LogInfo("WorkFilterDiagPatch applied (work ownership diagnostics)");
         }
 
         private void Update()
@@ -47,6 +51,8 @@ namespace EconomyConfigBridge
                 Logger.LogInfo("HqPlacementEligibilityPatch applied (placement for new joiners)");
             if (RedactPlacementFallbackPatch.TryApply())
                 Logger.LogInfo("RedactPlacementFallbackPatch applied (null HQ -> placement)");
+            if (WorkFilterDiagPatch.TryApply())
+                Logger.LogInfo("WorkFilterDiagPatch applied (work ownership diagnostics)");
         }
     }
 
