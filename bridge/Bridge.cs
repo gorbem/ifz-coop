@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using BepInEx;
 using Gameplay;
@@ -13,7 +13,7 @@ namespace EconomyConfigBridge
 
         private void Awake()
         {
-            Logger.LogInfo("EconomyConfigBridge ready (v1.0.1)");
+            Logger.LogInfo("EconomyConfigBridge ready (v1.0.2)");
             try
             {
                 new HarmonyLib.Harmony("local.ifz.squadfog").PatchAll(typeof(SquadFogPatch));
@@ -97,3 +97,4 @@ namespace EconomyConfigBridge
         }
     }
 }
+
